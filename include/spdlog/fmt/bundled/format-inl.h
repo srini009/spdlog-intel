@@ -1915,48 +1915,9 @@ bool is_center_integer(typename float_info<T>::carrier_uint two_f, int exponent,
   return divisible_by_power_of_2(two_f, minus_k - exponent + 1);
 }
 
-inline auto clz(uint32_t x) -> int {
-  unsigned long r = 0;
-  _BitScanReverse(&r, x);
-  FMT_ASSERT(x != 0, "");
-  // Static analysis complains about using uninitialized data
-  // "r", but the only way that can happen is if "x" is 0,
-  // which the callers guarantee to not happen.
-  FMT_MSC_WARNING(suppress : 6102)
-  return 31 ^ static_cast<int>(r);
-}
-
-inline auto clzll(uint64_t x) -> int {
-  unsigned long r = 0;
-  // Scan the high 32 bits.
-  if (_BitScanReverse(&r, static_cast<uint32_t>(x >> 32))) return 63 ^ (r + 32);
-  // Scan the low 32 bits.
-  _BitScanReverse(&r, static_cast<uint32_t>(x));
-  FMT_ASSERT(x != 0, "");
-  FMT_MSC_WARNING(suppress : 6102)  // Suppress a bogus static analysis warning.
-  return 63 ^ static_cast<int>(r);
-}
-
-inline auto ctz(uint32_t x) -> int {
-  unsigned long r = 0;
-  _BitScanForward(&r, x);
-  FMT_ASSERT(x != 0, "");
-  FMT_MSC_WARNING(suppress : 6102)  // Suppress a bogus static analysis warning.
-  return static_cast<int>(r);
-}
-
-inline auto ctzll(uint64_t x) -> int {
-  unsigned long r = 0;
-  FMT_ASSERT(x != 0, "");
-  FMT_MSC_WARNING(suppress : 6102)  // Suppress a bogus static analysis warning.
-  // Scan the low 32 bits.
-  if (_BitScanForward(&r, static_cast<uint32_t>(x))) return static_cast<int>(r);
-  // Scan the high 32 bits.
-  _BitScanForward(&r, static_cast<uint32_t>(x >> 32));
-  r += 32;
 // Remove trailing zeros from n and return the number of zeros removed (float)
 FMT_INLINE int remove_trailing_zeros(uint32_t& n) FMT_NOEXCEPT {
-  int t = ctz(n);
+  int t = __builtin_ctz(n);
   if (t > float_info<float>::max_trailing_zeros)
     t = float_info<float>::max_trailing_zeros;
 
@@ -1980,7 +1941,7 @@ FMT_INLINE int remove_trailing_zeros(uint32_t& n) FMT_NOEXCEPT {
 
 // Removes trailing zeros and returns the number of zeros removed (double)
 FMT_INLINE int remove_trailing_zeros(uint64_t& n) FMT_NOEXCEPT {
-  int t = ctzll(n);
+  int t = __builtin_ctzll(n);
   if (t > float_info<double>::max_trailing_zeros)
     t = float_info<double>::max_trailing_zeros;
   // Divide by 10^8 and reduce to 32-bits
