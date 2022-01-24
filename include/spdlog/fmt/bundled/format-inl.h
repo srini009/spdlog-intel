@@ -1914,7 +1914,7 @@ bool is_center_integer(typename float_info<T>::carrier_uint two_f, int exponent,
   // Exponent for 2 is negative.
   return divisible_by_power_of_2(two_f, minus_k - exponent + 1);
 }
-_BitScanReverse
+
 inline auto clz(uint32_t x) -> int {
   unsigned long r = 0;
   _BitScanReverse(&r, x);
